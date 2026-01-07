@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>P-Brain 全国データ</title>
+<style>
+:root{
+  --bg:#0b0f19;
+  --card:#121a2a;
+  --text:#e7eefc;
+  --muted:#a9b7d0;
+  --line:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  background: linear-gradient(180deg,#070a12 0%, #0b0f19 50%, #070a12 100%);
+  color:var(--text);
+}
+.container{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+.header{
+  display:flex; gap:16px; align-items:flex-end; justify-content:space-between; flex-wrap:wrap;
+  padding:16px 18px; border:1px solid var(--line); border-radius:18px;
+  background: radial-gradient(1200px 600px at 10% 0%, rgba(106,169,255,.18), transparent 60%),
+              radial-gradient(900px 500px at 80% 10%, rgba(74,222,128,.10), transparent 60%),
+              rgba(18,26,42,.75);
+  backdrop-filter: blur(10px);
+}
+.h-title{font-size:22px; font-weight:800; letter-spacing:.02em}
+.h-sub{color:var(--muted); font-size:13px; margin-top:6px}
+.badge{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 12px; border:1px solid var(--line); border-radius:999px;
+  background: rgba(255,255,255,.04);
+  font-size:12px; color:var(--muted);
+}
+.grid{display:grid; grid-template-columns:1fr; gap:16px; margin-top:16px}
+.card{
+  border:1px solid var(--line); border-radius:18px; background: rgba(18,26,42,.75);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  overflow:hidden;
+}
+.card-head{
+  padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  border-bottom:1px solid var(--line);
+}
+.card-title{font-size:16px; font-weight:800}
+.card-note{font-size:12px; color:var(--muted)}
+.note-inline{ font-size:12px; opacity:.8; margin-left:8px; }
+
+.kpi{ display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap:10px; margin:12px 0 14px; }
+.kpi-item{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:10px 12px; }
+.kpi-item .label{ font-size:12px; opacity:.75; }
+.kpi-item .value{ font-size:18px; font-weight:700; margin-top:4px; letter-spacing:.2px; }
+
+.table-wrap{overflow:auto; border-radius:14px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.18);}
+table{border-collapse:collapse; width:100%; min-width:1100px; font-size:12px;}
+thead th{
+  position:sticky; top:0;
+  background: rgba(18,26,42,.92);
+  border-bottom:1px solid rgba(255,255,255,.10);
+  padding:10px 8px;
+  text-align:left;
+  white-space:nowrap;
+}
+tbody td{
+  border-top:1px solid rgba(255,255,255,.06);
+  padding:9px 8px;
+  vertical-align:top;
+  white-space:nowrap;
+}
+tbody tr:nth-child(even){background: rgba(255,255,255,.02);}
+.small{font-size:12px; color:var(--muted); margin-top:8px;}
+.footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width: 640px){
+  .kpi{grid-template-columns: repeat(2, minmax(0,1fr));}
+  table{min-width:980px;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<div>
+<div class="h-title">P-Brain 全国データ</div>
+<div class="h-sub">期間：2025年12月29日〜2026年1月4日</div>
+</div>
+<div class="badge">生成日: 2026-01-06（Asia/Tokyo）</div>
+</div>
+<div class="grid">
+<section class="card">
+<div class="card-head">
+<div>
+<div class="card-title">4円パチンコ TOP15 <span class="note-inline">（4円パチンコ全体）</span></div>
+<div class="card-note">指標：打込 / 玉利 / 台粗利 / 台売上 / 玉単価（平均/合計）</div>
+</div>
+</div>
+<div style="padding:12px 16px;">
+<div class="kpi">
+<div class="kpi-item"><div class="label">打込</div><div class="value">14,647</div></div>
+<div class="kpi-item"><div class="label">玉利</div><div class="value">0.420</div></div>
+<div class="kpi-item"><div class="label">台粗利</div><div class="value">6,156</div></div>
+<div class="kpi-item"><div class="label">台売上</div><div class="value">30,004</div></div>
+<div class="kpi-item"><div class="label">玉単価</div><div class="value">2.048</div></div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>順位</th><th>機種タイプ</th><th>機種</th><th>発売日</th><th>経過週</th><th>打込</th><th>玉利</th><th>台粗利</th><th>台売上</th><th>玉単価</th><th>打込シェア</th><th>台売上シェア</th><th>台粗利シェア</th><th>台数シェア</th></tr></thead><tbody><tr><td style="text-align:center;">1</td><td style="text-align:left;">スマパチ</td><td style="text-align:left;">e新世紀エヴァンゲリオン17はじまりの記憶R</td><td style="text-align:left;">2025/12/21</td><td style="text-align:right;">2</td><td style="text-align:right;">40,260</td><td style="text-align:right;">0.428</td><td style="text-align:right;">17,213</td><td style="text-align:right;">91,369</td><td style="text-align:right;">2.269</td><td style="text-align:right;">12.72%</td><td style="text-align:right;">14.09%</td><td style="text-align:right;">12.94%</td><td style="text-align:right;">4.63%</td></tr><tr><td style="text-align:center;">2</td><td style="text-align:left;">スマパチ</td><td style="text-align:left;">e北斗の拳11暴凶星SHEF</td><td style="text-align:left;">2025/12/07</td><td style="text-align:right;">4</td><td style="text-align:right;">29,937</td><td style="text-align:right;">0.493</td><td style="text-align:right;">14,760</td><td style="text-align:right;">68,544</td><td style="text-align:right;">2.290</td><td style="text-align:right;">6.10%</td><td style="text-align:right;">6.82%</td><td style="text-align:right;">7.15%</td><td style="text-align:right;">2.99%</td></tr><tr><td style="text-align:center;">3</td><td style="text-align:left;">スマパチ</td><td style="text-align:left;">e地獄少女7500Ver.RHZ</td><td style="text-align:left;">2025/12/07</td><td style="text-align:right;">4</td><td style="text-align:right;">28,431</td><td style="text-align:right;">0.425</td><td style="text-align:right;">12,070</td><td style="text-align:right;">66274</td><td style="text-align:right;">2.331</td><td style="text-align:right;">1.15%</td><td style="text-align:right;">1.31%</td><td style="text-align:right;">1.16%</td><td style="text-align:right;">0.59%</td></tr><tr><td style="text-align:center;">4</td><td style="text-align:left;">スマパチ</td><td style="text-align:left;">e東京喰種W</td><td style="text-align:left;">2025/04/20</td><td style="text-align:right;">37</td><td style="text-align:right;">25,698</td><td style="text-align:right;">0.402</td><td style="text-align:right;">10,343</td><td style="text-align:right;">56664</td><td style="text-align:right;">2.205</td><td style="text-align:right;">7.65%</td><td style="text-align:right;">8.23%</td><td style="text-align:right;">7.32%</td><td style="text-align:right;">4.36%</td></tr><tr><td style="text-align:center;">5</td><td style="text-align:left;">スマパチ</td><td style="text-align:left;">e女神のカフェテラスJLZ</td><td style="text-align:left;">2025/08/17</td><td style="text-align:right;">20</td><td style="text-align:right;">25611</td><td style="text-align:right;">0.415</td><td style="text-align:right;">10622</td><td style="text-align:right;">58230</td><td style="text-align:right;">2.274</td><td style="text-align:right;">1.18%</td><td style="text-align:right;">1.31%</td><td style="text-align:right;">1.16%</td><td style="text-align:right;">0.67%</td></tr><tr><td style="text-align:center;">6</td><td style="text-align:left;">スマパチ</td><td style="text-align:left;">e牙狼12XX-MJ</td><td style="text-align:left;">2025/08/03</td><td style="text-align:right;">22</td><td style="text-align:right;">24913</td><td style="text-align:right;">0.436</td><td style="text-align:right;">10,867</td><td style="text-align:right;">57,611</td><td style="text-align:right;">2.313</td><td style="text-align:right;">4.87%</td><td style="text-align:right;">5.50%</td><td style="text-align:right;">5.06%</td><td style="text-align:right;">2.87%</td></tr><tr><td style="text-align:center;">7</td><td style="text-align:left;">羽根・特殊</td><td style="text-align:left;">P沖ドキ!LG</td><td style="text-align:left;">2025/12/21</td><td style="text-align:right;">2</td><td style="text-align:right;">22,055</td><td style="text-align:right;">0.770</td><td style="text-align:right;">16,977</td><td style="text-align:right;">45,108</td><td style="text-align:right;">2.045</td><td style="text-align:right;">0.78%</td><td style="text-align:right;">0.78%</td><td style="text-align:right;">1.43%</td><td style="text-align:right;">0.52%</td></tr><tr><td style="text-align:center;">8</td><td style="text-align:left;">スマパチ</td><td style="text-align:left;">eアズールレーンTHEANIMATION2K6</td><td style="text-align:left;">2025/12/07</td><td style="text-align:right;">4</td><td style="text-align:right;">21484</td><td style="text-align:right;">0.447</td><td style="text-align:right;">9,604</td><td style="text-align:right;">47873</td><td style="text-align:right;">2.228</td><td style="text-align:right;">1.39%</td><td style="text-align:right;">1.51%</td><td style="text-align:right;">1.48%</td><td style="text-align:right;">0.95%</td></tr><tr><td style="text-align:center;">9</td><td style="text-align:left;">ミドル海</td><td style="text-align:left;">P大海物語5スペシャルALTA</td><td style="text-align:left;">2024/11/04</td><td style="text-align:right;">60</td><td style="text-align:right;">21,415</td><td style="text-align:right;">0.241</td><td style="text-align:right;">5,161</td><td style="text-align:right;">32812</td><td style="text-align:right;">1.532</td><td style="text-align:right;">3.15%</td><td style="text-align:right;">2.36%</td><td style="text-align:right;">1.81%</td><td style="text-align:right;">2.16%</td></tr><tr><td style="text-align:center;">10</td><td style="text-align:left;">甘デジ</td><td style="text-align:left;">P少女歌レヴュースタァライトV3</td><td style="text-align:left;">2025/12/21</td><td style="text-align:right;">2</td><td style="text-align:right;">21,194</td><td style="text-align:right;">0.597</td><td style="text-align:right;">12,648</td><td style="text-align:right;">41,269</td><td style="text-align:right;">1.947</td><td style="text-align:right;">0.03%</td><td style="text-align:right;">0.03%</td><td style="text-align:right;">0.04%</td><td style="text-align:right;">0.02%</td></tr><tr><td style="text-align:center;">11</td><td style="text-align:left;">ミドル海</td><td style="text-align:left;">P大海物語5MTE2</td><td style="text-align:left;">2023/02/05</td><td style="text-align:right;">152</td><td style="text-align:right;">18,249</td><td style="text-align:right;">0.192</td><td style="text-align:right;">3,496</td><td style="text-align:right;">29,189</td><td style="text-align:right;">1.600</td><td style="text-align:right;">3.60%</td><td style="text-align:right;">2.81%</td><td style="text-align:right;">1.64%</td><td style="text-align:right;">2.89%</td></tr><tr><td style="text-align:center;">12</td><td style="text-align:left;">スマパチ</td><td style="text-align:left;">e大海物語5スペシャルELTA4</td><td style="text-align:left;">2024/11/04</td><td style="text-align:right;">60</td><td style="text-align:right;">18,197</td><td style="text-align:right;">0.196</td><td style="text-align:right;">3,568</td><td style="text-align:right;">29,663</td><td style="text-align:right;">1.630</td><td style="text-align:right;">0.18%</td><td style="text-align:right;">0.15%</td><td style="text-align:right;">0.09%</td><td style="text-align:right;">0.15%</td></tr><tr><td style="text-align:center;">13</td><td style="text-align:left;">羽根・特殊</td><td style="text-align:left;">Pポチッと一発おだてブタ2V1</td><td style="text-align:left;">2024/01/08</td><td style="text-align:right;">103</td><td style="text-align:right;">17,885</td><td style="text-align:right;">0.115</td><td style="text-align:right;">2,053</td><td style="text-align:right;">10,841</td><td style="text-align:right;">0.606</td><td style="text-align:right;">0.44%</td><td style="text-align:right;">0.13%</td><td style="text-align:right;">0.12%</td><td style="text-align:right;">0.36%</td></tr><tr><td style="text-align:center;">14</td><td style="text-align:left;">スマパチ</td><td style="text-align:left;">e花の慶次～黄金の一撃H4</td><td style="text-align:left;">2025/11/03</td><td style="text-align:right;">8</td><td style="text-align:right;">17,385</td><td style="text-align:right;">0.463</td><td style="text-align:right;">8,050</td><td style="text-align:right;">39,372</td><td style="text-align:right;">2.265</td><td style="text-align:right;">1.92%</td><td style="text-align:right;">2.13%</td><td style="text-align:right;">2.12%</td><td style="text-align:right;">1.62%</td></tr><tr><td style="text-align:center;">15</td><td style="text-align:left;">ハイミドル</td><td style="text-align:left;">P新世紀エヴァンゲリオン15RRAOME</td><td style="text-align:left;">2021/12/19</td><td style="text-align:right;">211</td><td style="text-align:right;">17,149</td><td style="text-align:right;">0.343</td><td style="text-align:right;">5874</td><td style="text-align:right;">36,729</td><td style="text-align:right;"></td><td style="text-align:right;">7.42%</td><td style="text-align:right;">7.16%</td><td style="text-align:right;">6.05%</td><td style="text-align:right;">6.35%</td></tr></tbody></table></div>
+<div class="small">※ 横スクロールできます（表の列が多いため）。</div>
+</div>
+</section>
+<section class="card">
+<div class="card-head">
+<div>
+<div class="card-title">20円スロット TOP15</div>
+<div class="card-note">指標：打込 / 玉利 / 台粗利 / 台売上 / 玉単価（平均/合計）</div>
+</div>
+</div>
+<div style="padding:12px 16px;">
+<div class="kpi">
+<div class="kpi-item"><div class="label">打込</div><div class="value">10,848</div></div>
+<div class="kpi-item"><div class="label">玉利</div><div class="value">0.478</div></div>
+<div class="kpi-item"><div class="label">台粗利</div><div class="value">5,183</div></div>
+<div class="kpi-item"><div class="label">台売上</div><div class="value">30,847</div></div>
+<div class="kpi-item"><div class="label">玉単価</div><div class="value">2.844</div></div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>順位</th><th>機種タイプ</th><th>機種</th><th>発売日</th><th>経過週</th><th>打込</th><th>玉利</th><th>台粗利</th><th>台売上</th><th>玉単価</th><th>打込シェア</th><th>台売上シェア</th><th>台粗利シェア</th><th>台数シェア</th></tr></thead><tbody><tr><td style="text-align:center;">1</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">L無職転生一異世界行ったら本気だす</td><td style="text-align:left;">2025/12/21</td><td style="text-align:right;">3</td><td style="text-align:right;">21,369</td><td style="text-align:right;">0.694</td><td style="text-align:right;">14,828</td><td style="text-align:right;">68,349</td><td style="text-align:right;">3.199</td><td style="text-align:right;">1.02%</td><td style="text-align:right;">1.15%</td><td style="text-align:right;">1.49%</td><td style="text-align:right;">0.52%</td></tr><tr><td style="text-align:center;">2</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">Lスマスロ化物語KH</td><td style="text-align:left;">2025/12/07</td><td style="text-align:right;">5</td><td style="text-align:right;">20,791</td><td style="text-align:right;">0.528</td><td style="text-align:right;">10,980</td><td style="text-align:right;">60,963</td><td style="text-align:right;">2.932</td><td style="text-align:right;">2.69%</td><td style="text-align:right;">2.77%</td><td style="text-align:right;">2.97%</td><td style="text-align:right;">1.40%</td></tr><tr><td style="text-align:center;">3</td><td style="text-align:left;">スマスロAタイプ</td><td style="text-align:left;">LB不ニM2</td><td style="text-align:left;">2025/12/21</td><td style="text-align:right;">3</td><td style="text-align:right;">18,616</td><td style="text-align:right;">0.410</td><td style="text-align:right;">7,634</td><td style="text-align:right;">34,044</td><td style="text-align:right;">1.829</td><td style="text-align:right;">0.38%</td><td style="text-align:right;">0.24%</td><td style="text-align:right;">0.32%</td><td style="text-align:right;">0.22%</td></tr><tr><td style="text-align:center;">4</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">L/スマスロ秘宝伝/PA7</td><td style="text-align:left;">2025/12/21</td><td style="text-align:right;">3</td><td style="text-align:right;">17,768</td><td style="text-align:right;">0.644</td><td style="text-align:right;">11,440</td><td style="text-align:right;">54,557</td><td style="text-align:right;">3.071</td><td style="text-align:right;">1.98%</td><td style="text-align:right;">2.14%</td><td style="text-align:right;">2.67%</td><td style="text-align:right;">1.21%</td></tr><tr><td style="text-align:center;">5</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">L東京種CT</td><td style="text-align:left;">2025/02/02</td><td style="text-align:right;">49</td><td style="text-align:right;">17,003</td><td style="text-align:right;">0.554</td><td style="text-align:right;">9,413</td><td style="text-align:right;">64,218</td><td style="text-align:right;">3.777</td><td style="text-align:right;">5.15%</td><td style="text-align:right;">6.84%</td><td style="text-align:right;">5.97%</td><td style="text-align:right;">3.29%</td></tr><tr><td style="text-align:center;">6</td><td style="text-align:left;">30φAタイプ</td><td style="text-align:left;">Sドラゴンハナハナへー関光~SP-30</td><td style="text-align:left;">2023/12/17</td><td style="text-align:right;">108</td><td style="text-align:right;">15,576</td><td style="text-align:right;">0.381</td><td style="text-align:right;">5,935</td><td style="text-align:right;">24,951</td><td style="text-align:right;">1.602</td><td style="text-align:right;">0.86%</td><td style="text-align:right;">0.48%</td><td style="text-align:right;">0.68%</td><td style="text-align:right;">0.60%</td></tr><tr><td style="text-align:center;">7</td><td style="text-align:left;">30φART/AT</td><td style="text-align:left;">S/沖ドキ!BLACK/XA</td><td style="text-align:left;">2024/12/01</td><td style="text-align:right;">58</td><td style="text-align:right;">15,138</td><td style="text-align:right;">0.646</td><td style="text-align:right;">9,778</td><td style="text-align:right;">55,648</td><td style="text-align:right;">3.676</td><td style="text-align:right;">1.42%</td><td style="text-align:right;">1.83%</td><td style="text-align:right;">1.92%</td><td style="text-align:right;">1.02%</td></tr><tr><td style="text-align:center;">8</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">LプリズムナナCC</td><td style="text-align:left;">2025/12/07</td><td style="text-align:right;">5</td><td style="text-align:right;">14,335</td><td style="text-align:right;">0.726</td><td style="text-align:right;">10,408</td><td style="text-align:right;">56,101</td><td style="text-align:right;">3.914</td><td style="text-align:right;">0.24%</td><td style="text-align:right;">0.32%</td><td style="text-align:right;">0.36%</td><td style="text-align:right;">0.18%</td></tr><tr><td style="text-align:center;">9</td><td style="text-align:left;">30φAタイプ</td><td style="text-align:left;">SキングハナハナSP-30</td><td style="text-align:left;">2023/03/19</td><td style="text-align:right;">147</td><td style="text-align:right;">14,221</td><td style="text-align:right;">0.418</td><td style="text-align:right;">5,948</td><td style="text-align:right;">24,150</td><td style="text-align:right;">1.698</td><td style="text-align:right;">2.62%</td><td style="text-align:right;">1.56%</td><td style="text-align:right;">2.29%</td><td style="text-align:right;">2.00%</td></tr><tr><td style="text-align:center;">10</td><td style="text-align:left;">ジャグラー</td><td style="text-align:left;">SマイジャグラーVKD</td><td style="text-align:left;">2021/12/05</td><td style="text-align:right;">214</td><td style="text-align:right;">14,148</td><td style="text-align:right;">0.358</td><td style="text-align:right;">5,062</td><td style="text-align:right;">24,995</td><td style="text-align:right;">1.767</td><td style="text-align:right;">10.41%</td><td style="text-align:right;">6.46%</td><td style="text-align:right;">7.19%</td><td style="text-align:right;">7.98%</td></tr><tr><td style="text-align:center;">11</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">L革命機ヴァルヴレイヴ2jF</td><td style="text-align:left;">2025/11/03</td><td style="text-align:right;">9</td><td style="text-align:right;">13,568</td><td style="text-align:right;">0.471</td><td style="text-align:right;">6,390</td><td style="text-align:right;">51,909</td><td style="text-align:right;">3.826</td><td style="text-align:right;">4.15%</td><td style="text-align:right;">5.58%</td><td style="text-align:right;">4.09%</td><td style="text-align:right;">3.32%</td></tr><tr><td style="text-align:center;">12</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">LアズールレーンTHEANIMATIONKN</td><td style="text-align:left;">2025/08/03</td><td style="text-align:right;">23</td><td style="text-align:right;">13,485</td><td style="text-align:right;">0.573</td><td style="text-align:right;">7,726</td><td style="text-align:right;">48,912</td><td style="text-align:right;">3.627</td><td style="text-align:right;">0.93%</td><td style="text-align:right;">1.18%</td><td style="text-align:right;">1.11%</td><td style="text-align:right;">0.75%</td></tr><tr><td style="text-align:center;">13</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">L黄門ちゃま天L2</td><td style="text-align:left;">2024/09/01</td><td style="text-align:right;">71</td><td style="text-align:right;">13,284</td><td style="text-align:right;">0.725</td><td style="text-align:right;">9,632</td><td style="text-align:right;">42,749</td><td style="text-align:right;">3.218</td><td style="text-align:right;">0.01%</td><td style="text-align:right;">0.01%</td><td style="text-align:right;">0.01%</td><td style="text-align:right;">0.01%</td></tr><tr><td style="text-align:center;">14</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">L/オキドキデュオ2/FR</td><td style="text-align:left;">2025/12/21</td><td style="text-align:right;">3</td><td style="text-align:right;">12,881</td><td style="text-align:right;">0.369</td><td style="text-align:right;">4,752</td><td style="text-align:right;">52,303</td><td style="text-align:right;">4.060</td><td style="text-align:right;">2.59%</td><td style="text-align:right;">3.70%</td><td style="text-align:right;">2.00%</td><td style="text-align:right;">2.18%</td></tr><tr><td style="text-align:center;">15</td><td style="text-align:left;">スマスロART/AT</td><td style="text-align:left;">しノイエギンエイデンGH</td><td style="text-align:left;">2025/12/07</td><td style="text-align:right;">5</td><td style="text-align:right;">12,472</td><td style="text-align:right;">0.329</td><td style="text-align:right;">4,104</td><td style="text-align:right;">38,165</td><td style="text-align:right;">3.060</td><td style="text-align:right;">0.13%</td><td style="text-align:right;">0.14%</td><td style="text-align:right;">0.09%</td><td style="text-align:right;">0.11%</td></tr></tbody></table></div>
+<div class="small">※ 横スクロールできます（表の列が多いため）。</div>
+</div>
+</section>
+</div>
+<div class="footer">copyright(c) P-Brain Co., Ltd. All Rights Reserved.</div>
+</div>
+</body>
+</html>
