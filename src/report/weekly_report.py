@@ -6,8 +6,8 @@ import os
 from datetime import datetime, timedelta
 
 # --- Configuration ---
-TODAY = datetime(2026, 3, 18)
-TWO_WEEKS_AGO = TODAY - timedelta(days=14)  # 2026/03/04
+TODAY = datetime(2026, 3, 24)
+TWO_WEEKS_AGO = TODAY - timedelta(days=14)  # 2026/03/10
 SHARE_THRESHOLD = 0.2  # 0.2%以下は除外
 WEEKS_OFFSET = -2  # 経過週の補正値
 
@@ -321,10 +321,10 @@ def main():
     cat = categorize_data(ocr_results)
 
     # Identify this week and prev week
-    p4_this_raw = cat.get(("4円パチンコ", "2026/03/09"))
-    p4_prev_raw = cat.get(("4円パチンコ", "2026/03/02"))
-    s20_this_raw = cat.get(("20円スロット", "2026/03/09"))
-    s20_prev_raw = cat.get(("20円スロット", "2026/03/02"))
+    p4_this_raw = cat.get(("4円パチンコ", "2026/03/16"))
+    p4_prev_raw = cat.get(("4円パチンコ", "2026/03/09"))
+    s20_this_raw = cat.get(("20円スロット", "2026/03/16"))
+    s20_prev_raw = cat.get(("20円スロット", "2026/03/09"))
 
     if not all([p4_this_raw, p4_prev_raw, s20_this_raw, s20_prev_raw]):
         print("ERROR: Missing data for some categories/periods")
@@ -354,11 +354,11 @@ def main():
     html = generate_html(
         p4_this, p4_prev_filtered,
         s20_this, s20_prev_filtered,
-        "2026/03/09", "2026/03/15",
+        "2026/03/16", "2026/03/22",
     )
 
     output_path = os.path.join(
-        os.path.dirname(__file__), "../../output/pbrain_weekly_20260315.html"
+        os.path.dirname(__file__), "../../output/pbrain_weekly_20260322.html"
     )
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html)

@@ -23,12 +23,12 @@ PROMPT = """
    - `period_end`: 期間の終了日 (YYYY/MM/DD形式)
    - `type`: 種別 ("4円パチンコ" or "20円スロット") — 種別欄で「4~」にチェックなら"4円パチンコ"、「20~」にチェックなら"20円スロット"
 
-2. **summary** (平均/合計 行のデータ):
+2. **summary** (平均/合計 行のデータ、テーブル右側の数値列を左から順に):
    - `uchi_komi`: 打込 (整数)
-   - `tama_arari`: 玉粗利 (小数)
-   - `dai_arari`: 台粗利 (整数)
+   - `tama_tanka`: 玉単価 (小数) ※打込の右隣
+   - `tama_arari`: 玉粗利 (小数) ※玉単価の右隣
    - `dai_uriage`: 台売上 (整数)
-   - `tama_tanka`: 玉単価 (小数)
+   - `dai_arari`: 台粗利 (整数)
    - `rieki_ritsu`: 利益率 (小数、%の数値部分のみ。例: 16.41)
 
 3. **machines** (機種データの配列、上から順に全行):
@@ -39,10 +39,10 @@ PROMPT = """
    - `release_date`: 発売日 (YYYY/MM/DD形式)
    - `elapsed_weeks`: 経過週 (整数)
    - `uchi_komi`: 打込 (整数)
-   - `tama_arari`: 玉粗利 (小数)
-   - `dai_arari`: 台粗利 (整数)
+   - `tama_tanka`: 玉単価 (小数) ※打込の右隣
+   - `tama_arari`: 玉粗利 (小数) ※玉単価の右隣
    - `dai_uriage`: 台売上 (整数)
-   - `tama_tanka`: 玉単価 (小数)
+   - `dai_arari`: 台粗利 (整数)
    - シェア列（右側4列）: **必ず左から順に以下の通り読み取ること**
      - `uchi_komi_share`: 打込シェア（右側4列の1列目）
      - `dai_uriage_share`: 台売上シェア（右側4列の2列目）
