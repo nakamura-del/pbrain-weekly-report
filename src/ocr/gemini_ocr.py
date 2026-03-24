@@ -63,6 +63,7 @@ P-Brainのテーブル右側にある4つのシェア列は、左から順に：
 - 機種名の特殊記号(φ、○、×、☆、・等)はそのまま保持すること
 - 読み取れない値はnullとすること
 - 全ての行を漏れなく抽出すること（表示されている全機種）
+- 機種名は画像のテキストを1文字ずつ正確に読み取ること。パチンコ・パチスロの実在する機種名であることを考慮し、類似文字の誤認識に注意すること（例: 「えとたま」を「とあるまえ」と読み間違えない）
 
 JSONのみを返してください。説明文は不要です。
 """
@@ -101,6 +102,24 @@ def ocr_screenshot(image_path):
     return json.loads(text)
 
 
+# 機種名の既知の誤認識を修正するマッピング
+NAME_CORRECTIONS = {
+    "Pとあるまえ2SE": "Pえとたま2SE",
+    "Pとあるまえと2SE": "Pえとたま2SE",
+}
+
+
+def postprocess(data):
+    """OCR結果の後処理: 既知の誤認識を修正"""
+    for m in data.get("machines", []):
+        name = m.get("name", "")
+        if name in NAME_CORRECTIONS:
+            corrected = NAME_CORRECTIONS[name]
+            print(f"  [fix] {name} → {corrected}")
+            m["name"] = corrected
+    return data
+
+
 def process_all_screenshots(screenshots_dir):
     """Process all screenshots in directory."""
     files = sorted(glob.glob(os.path.join(screenshots_dir, "*.png")))
@@ -113,6 +132,7 @@ def process_all_screenshots(screenshots_dir):
         print(f"Processing: {os.path.basename(f)}")
         data = ocr_screenshot(f)
         data["_source_file"] = os.path.basename(f)
+        data = postprocess(data)
         header = data.get("header", {})
         print(f"  → {header.get('type', '?')} | {header.get('period_start', '?')}〜{header.get('period_end', '?')}")
         machine_count = len(data.get("machines", []))
