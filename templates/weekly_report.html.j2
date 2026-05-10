@@ -5,119 +5,152 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P-Brain 週間レポート（{{ period }}）</title>
 <style>
-  body { font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif; max-width: 1200px; margin: 2em auto; padding: 0 1em; color: #222; line-height: 1.6; }
-  h1 { border-bottom: 3px solid #1a5490; padding-bottom: 0.3em; }
-  h2 { margin-top: 2em; padding: 0.4em 0.6em; border-left: 6px solid #c0392b; background: #fcf3f3; }
-  h2.slot { border-left-color: #2980b9; background: #f3f7fc; }
-  .meta { color: #666; font-size: 14px; margin-bottom: 1em; }
-  .avg-block { background: #f7f9fc; padding: 1em 1.4em; border-radius: 6px; margin: 1em 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
-  .avg-item .lbl { font-size: 12px; color: #666; }
-  .avg-item .val { font-size: 20px; font-weight: 600; color: #1a5490; }
-  table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 13px; }
-  th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: right; white-space: nowrap; }
-  th { background: #1a5490; color: #fff; font-weight: 500; }
-  td.kishu { text-align: left; white-space: normal; min-width: 180px; }
-  tr:nth-child(even) { background: #f7f9fc; }
-  .change { text-align: center; font-weight: bold; }
-  .change.up { color: #c0392b; }
-  .change.down { color: #2980b9; }
-  .change.new { color: #27ae60; }
-  .legend { font-size: 12px; color: #666; margin-top: 1em; padding: 0.6em; background: #fafafa; border-radius: 4px; }
-  .footer { margin-top: 3em; padding-top: 1em; border-top: 1px solid #eee; color: #999; font-size: 12px; }
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2e3347;
+    --accent-p: #4f9cf9; --accent-s: #3ecf8e; --text: #e2e8f0; --muted: #8892a4;
+    --up: #3ecf8e; --down: #f87171; --new: #f59e0b;
+    --header-grad-p: linear-gradient(135deg, #1e3a5f 0%, #1a1d27 100%);
+    --header-grad-s: linear-gradient(135deg, #0f3d2e 0%, #1a1d27 100%);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif; font-size: 14px; line-height: 1.5; padding: 24px 16px 48px; max-width: 1100px; margin: 0 auto; }
+  .page-header { text-align: center; padding: 32px 24px 28px; margin-bottom: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; position: relative; overflow: hidden; }
+  .page-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-p), var(--accent-s)); }
+  .page-header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 8px; }
+  .page-header .meta { font-size: 13px; color: var(--muted); display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+  .meta-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-p { background: var(--accent-p); } .dot-s { background: var(--accent-s); }
+  .section { margin-bottom: 40px; }
+  .section-header { padding: 14px 20px; border-radius: 10px 10px 0 0; display: flex; align-items: center; gap: 12px; }
+  .section-header.pachinko { background: var(--header-grad-p); border: 1px solid #2a4a7a; }
+  .section-header.slot { background: var(--header-grad-s); border: 1px solid #1a4a35; }
+  .section-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; padding: 3px 10px; border-radius: 20px; }
+  .tag-p { background: rgba(79,156,249,0.2); color: var(--accent-p); border: 1px solid rgba(79,156,249,0.4); }
+  .tag-s { background: rgba(62,207,142,0.2); color: var(--accent-s); border: 1px solid rgba(62,207,142,0.4); }
+  .section-title { font-size: 17px; font-weight: 700; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-top: none; }
+  @media (max-width: 700px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+  .kpi-card { background: var(--surface); padding: 14px 12px; text-align: center; }
+  .kpi-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .kpi-value { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .kpi-value.color-p { color: var(--accent-p); } .kpi-value.color-s { color: var(--accent-s); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 860px; }
+  thead th { background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; padding: 8px 10px; white-space: nowrap; border-bottom: 1px solid var(--border); text-align: right; }
+  thead th:nth-child(1), thead th:nth-child(2) { text-align: center; }
+  thead th:nth-child(3) { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr:nth-child(1) { background: rgba(255,215,0,0.04); }
+  tbody tr:nth-child(2) { background: rgba(192,192,192,0.03); }
+  tbody tr:nth-child(3) { background: rgba(176,120,60,0.03); }
+  td { padding: 8px 10px; text-align: right; color: var(--text); }
+  td:nth-child(1) { text-align: center; width: 44px; }
+  td:nth-child(2) { text-align: center; width: 28px; }
+  td:nth-child(3) { text-align: left; font-size: 12px; min-width: 200px; max-width: 260px; }
+  td:nth-child(4) { color: var(--muted); font-size: 11px; text-align: center; }
+  td:nth-child(5) { color: var(--muted); font-size: 11px; text-align: center; }
+  .rank { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .rank-1 { color: #ffd700; } .rank-2 { color: #c0c0c0; } .rank-3 { color: #cd853f; }
+  .change { font-size: 13px; font-weight: 700; }
+  .change-up { color: var(--up); } .change-down { color: var(--down); }
+  .change-new { color: var(--new); font-size: 10px; font-weight: 800; }
+  .change-same { color: var(--muted); }
+  .machine-name { font-size: 12px; line-height: 1.4; }
+  .machine-type { font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .profit-positive { color: var(--up); } .profit-negative { color: var(--down); }
+  .legend { margin-top: 10px; padding: 10px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 11px; color: var(--muted); display: flex; gap: 20px; flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .leg-new { color: var(--new); font-weight: 800; font-size: 10px; }
+  .leg-up { color: var(--up); font-weight: 700; }
+  .leg-down { color: var(--down); font-weight: 700; }
+  .leg-same { color: var(--muted); font-weight: 700; }
 </style>
 </head>
 <body>
-<h1>📊 P-Brain 週間レポート</h1>
-<div class="meta">
-  期間：{{ period }}<br>
-  対象：4円パチンコ / 20円スロット<br>
-  順位変動：先々週比（NEW / ▲ / ▼ / →）
+
+<div class="page-header">
+  <h1>📊 P-Brain 週間レポート</h1>
+  <div class="meta">
+    <div class="meta-item"><span class="dot dot-p"></span>期間：{{ period }}</div>
+    <div class="meta-item"><span class="dot dot-s"></span>対象：4円パチンコ / 20円スロット</div>
+    <div class="meta-item">順位変動：先々週比（NEW / ▲ / ▼ / →）</div>
+  </div>
 </div>
 
-<h2>PACHINKO 4円パチンコ 全体平均</h2>
-<div class="avg-block">
-  <div class="avg-item"><div class="lbl">打込</div><div class="val">{{ "{:,}".format(p4_avg.uchikomi) }}</div></div>
-  <div class="avg-item"><div class="lbl">玉粗利</div><div class="val">{{ "%.3f"|format(p4_avg.tama_arari) }}</div></div>
-  <div class="avg-item"><div class="lbl">台粗利</div><div class="val">{{ "{:,}".format(p4_avg.dai_arari) }}</div></div>
-  <div class="avg-item"><div class="lbl">台売上</div><div class="val">{{ "{:,}".format(p4_avg.dai_uriage) }}</div></div>
-  <div class="avg-item"><div class="lbl">玉単価</div><div class="val">{{ "%.3f"|format(p4_avg.tama_tanka) }}</div></div>
-  <div class="avg-item"><div class="lbl">利益率</div><div class="val">{{ "%.2f"|format(p4_avg.rieki_ritsu) }}%</div></div>
+{% macro change_class(c) -%}
+{%- if c == '▲' -%}change-up
+{%- elif c == '▼' -%}change-down
+{%- elif c == 'NEW' -%}change-new
+{%- else -%}change-same
+{%- endif -%}
+{%- endmacro %}
+
+{% macro section(tag_name, color, title, avg, ranking) %}
+<div class="section">
+  <div class="section-header {{ 'pachinko' if color == 'p' else 'slot' }}">
+    <span class="section-tag tag-{{ color }}">{{ tag_name }}</span>
+    <span class="section-title">{{ title }}</span>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">打込</div><div class="kpi-value color-{{ color }}">{{ "{:,}".format(avg.uchikomi) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">玉粗利</div><div class="kpi-value color-{{ color }}">{{ "%.3f"|format(avg.tama_arari) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">台粗利</div><div class="kpi-value color-{{ color }}">{{ "{:,}".format(avg.dai_arari) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">台売上</div><div class="kpi-value color-{{ color }}">{{ "{:,}".format(avg.dai_uriage) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">玉単価</div><div class="kpi-value color-{{ color }}">{{ "%.3f"|format(avg.tama_tanka) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">利益率</div><div class="kpi-value color-{{ color }}">{{ "%.2f"|format(avg.rieki_ritsu) }}%</div></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>順位</th><th>変動</th><th>機種</th><th>発売日</th><th>経過週</th>
+          <th>打込</th><th>玉粗利</th><th>台粗利</th><th>台売上</th><th>玉単価</th>
+          <th>打込シェア</th><th>台粗利シェア</th><th>台売上シェア</th><th>台数シェア</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in ranking %}
+        <tr>
+          <td><span class="rank{% if r.rank <= 3 %} rank-{{ r.rank }}{% endif %}">{{ r.rank }}</span></td>
+          <td><span class="change {{ change_class(r.change) }}">{{ r.change }}</span></td>
+          <td>
+            <div class="machine-name">{{ r.kishu }}</div>
+            {% if r.kishu_type %}<div class="machine-type">{{ r.kishu_type }}</div>{% endif %}
+          </td>
+          <td>{{ r.hatsubaibi }}</td>
+          <td>{{ r.keika_shu }}</td>
+          <td class="num">{{ "{:,}".format(r.uchikomi) }}</td>
+          <td class="num{% if r.tama_arari is not none and r.tama_arari < 0 %} profit-negative{% endif %}">{{ "%.3f"|format(r.tama_arari) }}</td>
+          <td class="num {% if r.dai_arari is not none and r.dai_arari < 0 %}profit-negative{% else %}profit-positive{% endif %}">{{ "{:,}".format(r.dai_arari) }}</td>
+          <td class="num">{{ "{:,}".format(r.dai_uriage) }}</td>
+          <td class="num">{{ "%.3f"|format(r.tama_tanka) }}</td>
+          <td class="num">{{ "%.2f"|format(r.uchikomi_share) }}%</td>
+          <td class="num{% if r.dai_arari_share is not none and r.dai_arari_share < 0 %} profit-negative{% endif %}">{{ "%.2f"|format(r.dai_arari_share) }}%</td>
+          <td class="num">{{ "%.2f"|format(r.dai_uriage_share) }}%</td>
+          <td class="num">{{ "%.2f"|format(r.daisuu_share) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
+{% endmacro %}
 
-<table>
-<thead><tr>
-<th>順位</th><th>変動</th><th>機種</th><th>発売日</th><th>経過週</th>
-<th>打込</th><th>玉粗利</th><th>台粗利</th><th>台売上</th><th>玉単価</th>
-<th>打込シェア</th><th>台粗利シェア</th><th>台売上シェア</th><th>台数シェア</th>
-</tr></thead>
-<tbody>
-{% for r in p4_ranking %}
-<tr>
-  <td>{{ r.rank }}</td>
-  <td class="change {% if r.change == '▲' %}up{% elif r.change == '▼' %}down{% elif r.change == 'NEW' %}new{% endif %}">{{ r.change }}</td>
-  <td class="kishu">{{ r.kishu }}</td>
-  <td>{{ r.hatsubaibi }}</td>
-  <td>{{ r.keika_shu }}</td>
-  <td>{{ "{:,}".format(r.uchikomi) }}</td>
-  <td>{{ "%.3f"|format(r.tama_arari) }}</td>
-  <td>{{ "{:,}".format(r.dai_arari) }}</td>
-  <td>{{ "{:,}".format(r.dai_uriage) }}</td>
-  <td>{{ "%.3f"|format(r.tama_tanka) }}</td>
-  <td>{{ "%.2f"|format(r.uchikomi_share) }}%</td>
-  <td>{{ "%.2f"|format(r.dai_arari_share) }}%</td>
-  <td>{{ "%.2f"|format(r.dai_uriage_share) }}%</td>
-  <td>{{ "%.2f"|format(r.daisuu_share) }}%</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+{{ section('PACHINKO', 'p', '4円パチンコ 全体平均', p4_avg, p4_ranking) }}
 
-<h2 class="slot">SLOT 20円スロット 全体平均</h2>
-<div class="avg-block">
-  <div class="avg-item"><div class="lbl">打込</div><div class="val">{{ "{:,}".format(s20_avg.uchikomi) }}</div></div>
-  <div class="avg-item"><div class="lbl">玉粗利</div><div class="val">{{ "%.3f"|format(s20_avg.tama_arari) }}</div></div>
-  <div class="avg-item"><div class="lbl">台粗利</div><div class="val">{{ "{:,}".format(s20_avg.dai_arari) }}</div></div>
-  <div class="avg-item"><div class="lbl">台売上</div><div class="val">{{ "{:,}".format(s20_avg.dai_uriage) }}</div></div>
-  <div class="avg-item"><div class="lbl">玉単価</div><div class="val">{{ "%.3f"|format(s20_avg.tama_tanka) }}</div></div>
-  <div class="avg-item"><div class="lbl">利益率</div><div class="val">{{ "%.2f"|format(s20_avg.rieki_ritsu) }}%</div></div>
-</div>
-
-<table>
-<thead><tr>
-<th>順位</th><th>変動</th><th>機種</th><th>発売日</th><th>経過週</th>
-<th>打込</th><th>玉粗利</th><th>台粗利</th><th>台売上</th><th>玉単価</th>
-<th>打込シェア</th><th>台粗利シェア</th><th>台売上シェア</th><th>台数シェア</th>
-</tr></thead>
-<tbody>
-{% for r in s20_ranking %}
-<tr>
-  <td>{{ r.rank }}</td>
-  <td class="change {% if r.change == '▲' %}up{% elif r.change == '▼' %}down{% elif r.change == 'NEW' %}new{% endif %}">{{ r.change }}</td>
-  <td class="kishu">{{ r.kishu }}</td>
-  <td>{{ r.hatsubaibi }}</td>
-  <td>{{ r.keika_shu }}</td>
-  <td>{{ "{:,}".format(r.uchikomi) }}</td>
-  <td>{{ "%.3f"|format(r.tama_arari) }}</td>
-  <td>{{ "{:,}".format(r.dai_arari) }}</td>
-  <td>{{ "{:,}".format(r.dai_uriage) }}</td>
-  <td>{{ "%.3f"|format(r.tama_tanka) }}</td>
-  <td>{{ "%.2f"|format(r.uchikomi_share) }}%</td>
-  <td>{{ "%.2f"|format(r.dai_arari_share) }}%</td>
-  <td>{{ "%.2f"|format(r.dai_uriage_share) }}%</td>
-  <td>{{ "%.2f"|format(r.daisuu_share) }}%</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+{{ section('SLOT', 's', '20円スロット 全体平均', s20_avg, s20_ranking) }}
 
 <div class="legend">
-NEW 初登場 ▲ 順位上昇 ▼ 順位下降 → 順位変わらず<br>
-順位変動は前週（{{ prev_period }}）との比較
+  <span><span class="leg-new">NEW</span> 初登場</span>
+  <span><span class="leg-up">▲</span> 順位上昇</span>
+  <span><span class="leg-down">▼</span> 順位下降</span>
+  <span><span class="leg-same">→</span> 順位変わらず</span>
+  <span style="color:var(--muted)">順位変動は前週（{{ prev_period }}）との比較</span>
 </div>
 
-<div class="footer">
-Auto-generated by Trust Link Partner / P-Brain Weekly Report Bot<br>
-生成期間：{{ period }}
-</div>
 </body>
 </html>

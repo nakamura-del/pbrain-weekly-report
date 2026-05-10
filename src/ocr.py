@@ -15,9 +15,26 @@ PROMPT = """
 
 2. 機種ランキングTOP15（表本体）
    各行について以下を取得：
-   - 順位、機種名（フル）、発売日（YYYY/MM/DD）、経過週
+   - 順位、機種タイプ（"スマパチ"・"ミドル海"・"スマスロ ART/AT"・"30φ Aタイプ"・"ジャグラー"・"ハイミドル"・"羽根・特殊" 等）、機種名（フル）
+   - 発売日（YYYY/MM/DD）、経過週
    - 打込、玉粗利、台粗利、台売上、玉単価
-   - 打込シェア（%）、台粗利シェア（%）、台売上シェア（%）、台数シェア（%）
+   - 打込シェア（%）、台売上シェア（%）、台粗利シェア（%）、台数シェア（%）
+
+★★ シェア列の読み取り順序（最重要）★★
+P-Brainのテーブル右側にある4つのシェア列は、左から順に：
+  1列目 = 打込シェア (uchikomi_share)
+  2列目 = 台売上シェア (dai_uriage_share)
+  3列目 = 台粗利シェア (dai_arari_share)
+  4列目 = 台数シェア (daisuu_share)
+台売上シェアが台粗利シェアより左にある。この順序を絶対に間違えないこと。
+
+★★ 機種名の先頭文字（重要）★★
+機種名の先頭1文字は機種カテゴリを示す:
+  - 「L」「S」で始まる = スロット機種（例: Lキン肉マン、Sジャグラー）
+  - 「e」「P」「φ」「Φ」で始まる = パチンコ機種（例: eキン肉マン、Pフィーバー）
+画面が20円スロットなら全機種が L/S で始まり、4円パチンコなら全機種が e/P/φ で始まる。
+機種タイプ列（"スマスロART/AT"、"ハイミドル" 等）と先頭文字の整合を取ること。
+スマスロ機種が「e～」になっているのは誤読。「L～」が正解。
 
 【出力形式】
 コードフェンス・前後説明文・コメント禁止。下記JSONのみ。
@@ -34,7 +51,8 @@ PROMPT = """
   "ranking": [
     {
       "rank": 1,
-      "kishu": "eフィーバーキン肉マン スマパチ",
+      "kishu_type": "スマパチ",
+      "kishu": "eフィーバーキン肉マン",
       "hatsubaibi": "2026/04/19",
       "keika_shu": 2,
       "uchikomi": 34164,
@@ -54,9 +72,12 @@ PROMPT = """
 """
 
 
+MODEL_NAME = "gemini-2.5-flash"
+
+
 def extract(image_path) -> dict:
     """スクショ画像から平均値とランキングを抽出"""
-    model = genai.GenerativeModel("gemini-2.0-flash-exp")
+    model = genai.GenerativeModel(MODEL_NAME)
     img = genai.upload_file(str(image_path))
     response = model.generate_content([PROMPT, img])
     text = response.text.strip()

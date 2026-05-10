@@ -4,8 +4,22 @@ from .config import ROOT, get_week_ranges
 from . import ranker
 
 
+WEEKS_OFFSET = -2  # 経過週の表示補正（P-Brain側の値から2を引く既存運用）
+
+
+def _adjust_elapsed_weeks(machines):
+    """経過週を補正値で調整（負にはしない）"""
+    for m in machines:
+        w = m.get("keika_shu")
+        if w is not None:
+            m["keika_shu"] = max(0, w + WEEKS_OFFSET)
+
+
 def build(ocr_data: dict, today_str: str) -> str:
     """4枚のOCR結果からHTMLレポートを生成"""
+    for sid in ["p4_lastweek", "p4_2weeksago", "s20_lastweek", "s20_2weeksago"]:
+        _adjust_elapsed_weeks(ocr_data[sid].get("ranking", []))
+
     p4_ranking = ranker.calc_rank_change(
         ocr_data["p4_lastweek"]["ranking"],
         ocr_data["p4_2weeksago"]["ranking"],

@@ -1,6 +1,8 @@
 .env
 screenshots/
 logs/
+probe/
+.omc/
 __pycache__/
 *.pyc
 .DS_Store

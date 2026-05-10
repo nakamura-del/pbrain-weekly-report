@@ -7,16 +7,15 @@ from .config import (
     SCREENSHOT_DIR, get_week_ranges,
 )
 
-# 既知のセレクタ（pbrain_auto_report.py の login() で実績あり）
+# 確定済みセレクタ（probe_dom.py での実機調査結果）
 SELECTORS = {
-    "login_id": "#LoginId",
-    "login_pw": "#LoginPassword",
-    "login_btn": "#btn_home_login",
-    # カレンダーUI関連は実画面確認後に確定する
-    "calendar_start": None,    # TODO: DOM調査で確定
-    "calendar_end": None,      # TODO: DOM調査で確定
-    "search_btn": None,        # TODO: DOM調査で確定
-    "table_ready": None,       # TODO: テーブル描画完了の目印
+    "login_id":   "#LoginId",
+    "login_pw":   "#LoginPassword",
+    "login_btn":  "#btn_home_login",
+    "term_start": "#ZAnalysisShareConditionTermStart",
+    "term_end":   "#ZAnalysisShareConditionTermEnd",
+    "search_btn": "#SearchButton",
+    "table_ready": "#shareList",
 }
 
 # ブックマーク（check_bookmarks.py で確定済）
@@ -35,12 +34,45 @@ async def login(page):
     await page.wait_for_load_state("networkidle")
 
 
-async def select_date_range(page, start_date, end_date):
-    """カレンダーUIで期間を選択 → 検索ボタン押下。
+async def _wait_ajax_idle(page, timeout_ms=60000):
+    """jQuery AJAX が完了するまで待つ（blockUI オーバーレイの消失と同義）"""
+    await page.wait_for_function(
+        "() => !window.jQuery || window.jQuery.active === 0",
+        timeout=timeout_ms,
+    )
 
-    ⚠️ DOM調査でセレクタ確定後に実装する。
-    """
-    raise NotImplementedError("calendar selectors not yet identified")
+
+async def select_date_range(page, start_date, end_date):
+    """期間を YYYY/MM/DD で入力 → 検索ボタン → 再描画完了まで待つ"""
+    s = start_date.strftime("%Y/%m/%d")
+    e = end_date.strftime("%Y/%m/%d")
+    # TermEnd の data-min は TermStart 値に追従するので、一旦 TermStart を過去側へ広げてから TermEnd を更新する
+    await page.fill(SELECTORS["term_start"], s)
+    await page.fill(SELECTORS["term_end"], e)
+    await page.click(SELECTORS["search_btn"])
+    await _wait_ajax_idle(page)
+    await page.wait_for_timeout(800)  # render flush
+    await page.wait_for_selector(SELECTORS["table_ready"], state="visible")
+
+
+KEEP_ROWS = 20  # 平均行 + TOP15 + 余裕
+
+
+async def _trim_for_capture(page):
+    """OCR向けにスクショサイズを抑える: shareList の末尾行を非表示にする"""
+    await page.evaluate("""(keep) => {
+        const tbody = document.querySelector('#shareList tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.rows);
+        rows.slice(keep).forEach(r => r.style.display = 'none');
+    }""", KEEP_ROWS)
+
+
+async def _capture(page, out_path):
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    await _trim_for_capture(page)
+    await page.screenshot(path=str(out_path), full_page=True)
+    return out_path
 
 
 async def collect(date_str: str) -> dict:
@@ -50,6 +82,7 @@ async def collect(date_str: str) -> dict:
     paths = {}
 
     weeks = get_week_ranges()
+    last_start, last_end = weeks["lastweek"]
     two_start, two_end = weeks["twoweeksago"]
 
     async with async_playwright() as p:
@@ -57,41 +90,31 @@ async def collect(date_str: str) -> dict:
         context = await browser.new_context(viewport={"width": 1920, "height": 1080})
         page = await context.new_page()
 
-        # 1. ログイン
         await login(page)
 
-        # 2. P4 × 先週（デフォルト期間が直近完了週の想定）
-        await page.goto(BOOKMARK_URLS["p4"])
-        await page.wait_for_load_state("networkidle")
-        await page.wait_for_timeout(2000)
-        path = out_dir / "p4_lastweek.png"
-        await page.screenshot(path=str(path), full_page=True)
-        paths["p4_lastweek"] = path
-        print(f"OK P4 先週 -> {path}")
+        for sid, url in [("p4", BOOKMARK_URLS["p4"]), ("s20", BOOKMARK_URLS["s20"])]:
+            await page.goto(url)
+            await page.wait_for_load_state("networkidle")
+            await page.wait_for_timeout(2000)
 
-        # 3. P4 × 先々週
-        await select_date_range(page, two_start, two_end)
-        path = out_dir / "p4_2weeksago.png"
-        await page.screenshot(path=str(path), full_page=True)
-        paths["p4_2weeksago"] = path
-        print(f"OK P4 先々週 -> {path}")
+            await select_date_range(page, last_start, last_end)
+            paths[f"{sid}_lastweek"] = await _capture(page, out_dir / f"{sid}_lastweek.png")
+            print(f"OK {sid} 先週 ({last_start:%Y/%m/%d}-{last_end:%Y/%m/%d}) -> {paths[f'{sid}_lastweek']}")
 
-        # 4. S20 × 先週
-        await page.goto(BOOKMARK_URLS["s20"])
-        await page.wait_for_load_state("networkidle")
-        await page.wait_for_timeout(2000)
-        path = out_dir / "s20_lastweek.png"
-        await page.screenshot(path=str(path), full_page=True)
-        paths["s20_lastweek"] = path
-        print(f"OK S20 先週 -> {path}")
-
-        # 5. S20 × 先々週
-        await select_date_range(page, two_start, two_end)
-        path = out_dir / "s20_2weeksago.png"
-        await page.screenshot(path=str(path), full_page=True)
-        paths["s20_2weeksago"] = path
-        print(f"OK S20 先々週 -> {path}")
+            await select_date_range(page, two_start, two_end)
+            paths[f"{sid}_2weeksago"] = await _capture(page, out_dir / f"{sid}_2weeksago.png")
+            print(f"OK {sid} 先々週 ({two_start:%Y/%m/%d}-{two_end:%Y/%m/%d}) -> {paths[f'{sid}_2weeksago']}")
 
         await browser.close()
 
     return paths
+
+
+if __name__ == "__main__":
+    # スタンドアロン実行: スクショ取得のみテスト
+    today = datetime.now()
+    weeks = get_week_ranges(today)
+    date_str = weeks["lastweek"][1].strftime("%Y-%m-%d")
+    print(f"scraper standalone test: 期間末 {date_str}")
+    paths = asyncio.run(collect(date_str))
+    print(f"\nresult: {paths}")
