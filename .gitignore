@@ -1,6 +1,8 @@
-.DS_Store
+.env
+screenshots/
+logs/
 __pycache__/
 *.pyc
-data/ocr_results.json
-input/screenshots/*.png
+.DS_Store
+.venv/
 .claude/
