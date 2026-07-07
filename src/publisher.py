@@ -36,17 +36,62 @@ def publish(report_html: str, date_str: str, snapshot: dict = None) -> str:
     return url
 
 
-def update_index_page():
-    """docs/直下の日付ディレクトリを一覧化"""
-    dirs = sorted(
-        [d.name for d in DOCS_DIR.iterdir() if d.is_dir()],
+# これ以前のレポートは一覧に出さない（6/28以前は不要）
+MIN_REPORT_DATE = "2026-07-05"
+
+
+def _report_dirs():
+    """一覧対象の日付ディレクトリ（MIN_REPORT_DATE以降、新しい順）"""
+    return sorted(
+        [
+            d.name for d in DOCS_DIR.iterdir()
+            if d.is_dir() and d.name >= MIN_REPORT_DATE and (d / "index.html").exists()
+        ],
         reverse=True,
     )
-    items = "\n".join(f'<li><a href="{d}/">{d}</a></li>' for d in dirs)
-    html = f"""<!DOCTYPE html>
+
+
+def update_index_page():
+    """トップ(index.html)＝最新レポートへ直接リダイレクト、
+    過去分選択画面(archive.html)＝7/5以降の一覧 を生成する。"""
+    dirs = _report_dirs()
+    latest = dirs[0] if dirs else None
+
+    # 1) トップ: 最新レポートへ即リダイレクト（開いたら最新が直接表示される）
+    if latest:
+        redirect = (
+            '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">'
+            f'<meta http-equiv="refresh" content="0; url=./{latest}/">'
+            '<title>P-Brain 週間レポート</title>'
+            f'<script>location.replace("./{latest}/");</script>'
+            '</head><body style="font-family:sans-serif;background:#0f1117;color:#e2e8f0;">'
+            f'最新レポートへ移動中… <a href="./{latest}/" style="color:#4f9cf9;">こちら</a>'
+            '</body></html>'
+        )
+        (DOCS_DIR / "index.html").write_text(redirect, encoding="utf-8")
+
+    # 2) 過去分選択画面（ダークテーマ・7/5以降のみ）
+    items = "\n".join(
+        f'    <li><a href="./{d}/">{d}</a></li>' for d in dirs
+    ) or "    <li>レポートはまだありません</li>"
+    archive = f"""<!DOCTYPE html>
 <html lang="ja"><head><meta charset="UTF-8">
-<title>P-Brain 週間レポート一覧</title>
-<style>body{{font-family:sans-serif;max-width:600px;margin:2em auto;}}</style>
-</head><body><h1>P-Brain 週間レポート一覧</h1>
-<ul>{items}</ul></body></html>"""
-    (DOCS_DIR / "index.html").write_text(html, encoding="utf-8")
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P-Brain 週間レポート 過去一覧</title>
+<style>
+  body {{ background:#0f1117; color:#e2e8f0; font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif; max-width:640px; margin:0 auto; padding:32px 20px 64px; }}
+  h1 {{ font-size:20px; border-bottom:2px solid #2e3347; padding-bottom:12px; margin-bottom:8px; }}
+  p.sub {{ color:#8892a4; font-size:13px; margin-bottom:24px; }}
+  ul {{ list-style:none; padding:0; }}
+  li {{ margin:0 0 10px; }}
+  li a {{ display:block; padding:14px 18px; background:#1a1d27; border:1px solid #2e3347; border-radius:10px; color:#4f9cf9; text-decoration:none; font-size:16px; font-weight:600; transition:background .1s; }}
+  li a:hover {{ background:#22263a; }}
+</style>
+</head><body>
+  <h1>📊 P-Brain 週間レポート 過去一覧</h1>
+  <p class="sub">週末日付（先週の日曜）で表示。新しい順。</p>
+  <ul>
+{items}
+  </ul>
+</body></html>"""
+    (DOCS_DIR / "archive.html").write_text(archive, encoding="utf-8")
