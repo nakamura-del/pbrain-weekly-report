@@ -42,19 +42,6 @@ async def _wait_ajax_idle(page, timeout_ms=60000):
     )
 
 
-async def select_date_range(page, start_date, end_date):
-    """期間を YYYY/MM/DD で入力 → 検索ボタン → 再描画完了まで待つ"""
-    s = start_date.strftime("%Y/%m/%d")
-    e = end_date.strftime("%Y/%m/%d")
-    # TermEnd の data-min は TermStart 値に追従するので、一旦 TermStart を過去側へ広げてから TermEnd を更新する
-    await page.fill(SELECTORS["term_start"], s)
-    await page.fill(SELECTORS["term_end"], e)
-    await page.click(SELECTORS["search_btn"])
-    await _wait_ajax_idle(page)
-    await page.wait_for_timeout(800)  # render flush
-    await page.wait_for_selector(SELECTORS["table_ready"], state="visible")
-
-
 KEEP_ROWS = 20  # 平均行 + TOP15 + 余裕
 
 
@@ -76,14 +63,15 @@ async def _capture(page, out_path):
 
 
 async def collect(date_str: str) -> dict:
-    """4枚のスクショを取得して保存パスを返す"""
+    """先週分のスクショ2枚(P4/S20)を取得して保存パスを返す。
+
+    ショートカット(P4/S20レポート用)は「前日までの直近7日間」設定なので、
+    月曜朝に開くだけで先週(月〜日)が既定表示される。日付操作は一切しない。
+    先々週は前週保存の data.json を参照するためスクレイプ不要。
+    """
     out_dir = SCREENSHOT_DIR / date_str
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = {}
-
-    weeks = get_week_ranges()
-    last_start, last_end = weeks["lastweek"]
-    two_start, two_end = weeks["twoweeksago"]
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -95,15 +83,14 @@ async def collect(date_str: str) -> dict:
         for sid, url in [("p4", BOOKMARK_URLS["p4"]), ("s20", BOOKMARK_URLS["s20"])]:
             await page.goto(url)
             await page.wait_for_load_state("networkidle")
+            await _wait_ajax_idle(page)
+            await page.wait_for_selector(SELECTORS["table_ready"], state="visible")
             await page.wait_for_timeout(2000)
 
-            await select_date_range(page, last_start, last_end)
+            start = await page.input_value(SELECTORS["term_start"])
+            end = await page.input_value(SELECTORS["term_end"])
             paths[f"{sid}_lastweek"] = await _capture(page, out_dir / f"{sid}_lastweek.png")
-            print(f"OK {sid} 先週 ({last_start:%Y/%m/%d}-{last_end:%Y/%m/%d}) -> {paths[f'{sid}_lastweek']}")
-
-            await select_date_range(page, two_start, two_end)
-            paths[f"{sid}_2weeksago"] = await _capture(page, out_dir / f"{sid}_2weeksago.png")
-            print(f"OK {sid} 先々週 ({two_start:%Y/%m/%d}-{two_end:%Y/%m/%d}) -> {paths[f'{sid}_2weeksago']}")
+            print(f"OK {sid} 先週 (既定期間 {start}〜{end}) -> {paths[f'{sid}_lastweek']}")
 
         await browser.close()
 

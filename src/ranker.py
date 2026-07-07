@@ -12,14 +12,62 @@
 from datetime import datetime, timedelta
 
 
+OCR_CORRECTIONS = {
+    "慶極推理": "虚構推理",
+    "袋炎ノ消防隊": "炎炎ノ消防隊",
+    "恐襲ノ": "最恐領域",
+    "ポッチーと一発おだてて": "ポチッと一発おだて",
+    "女神カフェテラスJL2": "女神のカフェテラスJLZ",
+}
+
+
 def normalize_kishu(name: str) -> str:
     """機種名のOCR揺れを吸収するための正規化"""
     if not name:
         return ""
+    for wrong, right in OCR_CORRECTIONS.items():
+        name = name.replace(wrong, right)
     name = name.replace(" ", "").replace("　", "")
     name = name.replace("・", "").replace("／", "").replace("/", "")
     name = name.replace(".", "").replace("．", "")
     return name.lower()
+
+
+def _is_zero_share(value) -> bool:
+    """台数シェアが実質 0.00% かを判定（丸め誤差を吸収）"""
+    try:
+        return abs(float(value)) < 0.005
+    except (TypeError, ValueError):
+        return False
+
+
+def filter_and_renumber(ranking: list, top_n: int = 15) -> list:
+    """台数シェア0.00%かつ経過週2週以上の機種を除外し、上位top_nに詰めて再採番する。
+
+    - 経過週=1の機種は台数シェア0.00%でも残す
+    - 除外判定には P-Brain 画面の元の経過週（生値）を使う
+    - 除外で空いた分は16位以降を繰り上げ、常にtop_n機種に揃える
+    - rank は詰めて 1〜top_n に再採番する
+    """
+    kept = []
+    for row in ranking:
+        keika = row.get("keika_shu")
+        if keika is not None and keika >= 2 and _is_zero_share(row.get("daisuu_share")):
+            continue
+        kept.append(row)
+    kept = kept[:top_n]
+    for i, row in enumerate(kept, start=1):
+        row["rank"] = i
+    return kept
+
+
+def apply_keika_display(ranking: list) -> None:
+    """表示用に経過週を-1する。ただし元が1週なら1のまま（0にしない）。"""
+    for row in ranking:
+        keika = row.get("keika_shu")
+        if keika is None:
+            continue
+        row["keika_shu"] = keika if keika <= 1 else keika - 1
 
 
 def _is_new_release(release_date_str, ref_date: datetime) -> bool:

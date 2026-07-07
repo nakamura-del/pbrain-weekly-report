@@ -30,11 +30,24 @@
   .tag-s { background: rgba(62,207,142,0.2); color: var(--accent-s); border: 1px solid rgba(62,207,142,0.4); }
   .section-title { font-size: 17px; font-weight: 700; }
   .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-top: none; }
-  @media (max-width: 700px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
   .kpi-card { background: var(--surface); padding: 14px 12px; text-align: center; }
   .kpi-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
   .kpi-value { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
   .kpi-value.color-p { color: var(--accent-p); } .kpi-value.color-s { color: var(--accent-s); }
+  @media (max-width: 600px) {
+    body { padding: 12px 10px 40px; }
+    .page-header { padding: 20px 14px 18px; margin-bottom: 20px; }
+    .page-header h1 { font-size: 17px; }
+    .page-header .meta { font-size: 11px; gap: 8px; flex-direction: column; align-items: center; }
+    .section-header { padding: 10px 14px; }
+    .section-title { font-size: 14px; }
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .kpi-card { padding: 10px 6px; }
+    .kpi-value { font-size: 16px; }
+    .kpi-label { font-size: 10px; }
+    .table-wrap { -webkit-overflow-scrolling: touch; }
+    .legend { gap: 10px; font-size: 10px; padding: 8px 12px; }
+  }
   .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 860px; }
   thead th { background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; padding: 8px 10px; white-space: nowrap; border-bottom: 1px solid var(--border); text-align: right; }
@@ -68,10 +81,40 @@
   .leg-up { color: var(--up); font-weight: 700; }
   .leg-down { color: var(--down); font-weight: 700; }
   .leg-same { color: var(--muted); font-weight: 700; }
+  .footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: 11px; line-height: 1.7; }
 </style>
 </head>
 <body>
-
+{% macro change_cell(c) -%}
+{%- if c == '▲' -%}<span class="change change-up">▲</span>
+{%- elif c == '▼' -%}<span class="change change-down">▼</span>
+{%- elif c == 'NEW' -%}<span class="change change-new">NEW</span>
+{%- else -%}<span class="change change-same">→</span>
+{%- endif -%}
+{%- endmacro %}
+{% macro rank_cell(n) -%}
+<span class="rank{% if n == 1 %} rank-1{% elif n == 2 %} rank-2{% elif n == 3 %} rank-3{% endif %}">{{ n }}</span>
+{%- endmacro %}
+{% macro rows(ranking) -%}
+{% for r in ranking %}
+      <tr>
+        <td>{{ rank_cell(r.rank) }}</td>
+        <td>{{ change_cell(r.change) }}</td>
+        <td><div class="machine-name">{{ r.kishu }}</div>{% if r.shubetsu %}<div class="machine-type">{{ r.shubetsu }}</div>{% endif %}</td>
+        <td>{{ r.hatsubaibi }}</td>
+        <td>{{ r.keika_shu }}</td>
+        <td class="num">{{ "{:,}".format(r.uchikomi) }}</td>
+        <td class="num{% if r.tama_arari < 0 %} profit-negative{% endif %}">{{ "%.3f"|format(r.tama_arari) }}</td>
+        <td class="num {% if r.dai_arari < 0 %}profit-negative{% else %}profit-positive{% endif %}">{{ "{:,}".format(r.dai_arari) }}</td>
+        <td class="num">{{ "{:,}".format(r.dai_uriage) }}</td>
+        <td class="num">{{ "%.3f"|format(r.tama_tanka) }}</td>
+        <td class="num">{{ "%.2f"|format(r.uchikomi_share) }}%</td>
+        <td class="num{% if r.dai_arari_share < 0 %} profit-negative{% endif %}">{{ "%.2f"|format(r.dai_arari_share) }}%</td>
+        <td class="num">{{ "%.2f"|format(r.dai_uriage_share) }}%</td>
+        <td class="num">{{ "%.2f"|format(r.daisuu_share) }}%</td>
+      </tr>
+{% endfor %}
+{%- endmacro %}
 <div class="page-header">
   <h1>📊 P-Brain 週間レポート</h1>
   <div class="meta">
@@ -81,68 +124,51 @@
   </div>
 </div>
 
-{% macro change_class(c) -%}
-{%- if c == '▲' -%}change-up
-{%- elif c == '▼' -%}change-down
-{%- elif c == 'NEW' -%}change-new
-{%- else -%}change-same
-{%- endif -%}
-{%- endmacro %}
-
-{% macro section(tag_name, color, title, avg, ranking) %}
 <div class="section">
-  <div class="section-header {{ 'pachinko' if color == 'p' else 'slot' }}">
-    <span class="section-tag tag-{{ color }}">{{ tag_name }}</span>
-    <span class="section-title">{{ title }}</span>
+  <div class="section-header pachinko">
+    <span class="section-tag tag-p">PACHINKO</span>
+    <span class="section-title">4円パチンコ 全体平均</span>
   </div>
   <div class="kpi-grid">
-    <div class="kpi-card"><div class="kpi-label">打込</div><div class="kpi-value color-{{ color }}">{{ "{:,}".format(avg.uchikomi) }}</div></div>
-    <div class="kpi-card"><div class="kpi-label">玉粗利</div><div class="kpi-value color-{{ color }}">{{ "%.3f"|format(avg.tama_arari) }}</div></div>
-    <div class="kpi-card"><div class="kpi-label">台粗利</div><div class="kpi-value color-{{ color }}">{{ "{:,}".format(avg.dai_arari) }}</div></div>
-    <div class="kpi-card"><div class="kpi-label">台売上</div><div class="kpi-value color-{{ color }}">{{ "{:,}".format(avg.dai_uriage) }}</div></div>
-    <div class="kpi-card"><div class="kpi-label">玉単価</div><div class="kpi-value color-{{ color }}">{{ "%.3f"|format(avg.tama_tanka) }}</div></div>
-    <div class="kpi-card"><div class="kpi-label">利益率</div><div class="kpi-value color-{{ color }}">{{ "%.2f"|format(avg.rieki_ritsu) }}%</div></div>
+    <div class="kpi-card"><div class="kpi-label">打込</div><div class="kpi-value color-p">{{ "{:,}".format(p4_avg.uchikomi) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">玉粗利</div><div class="kpi-value color-p">{{ "%.3f"|format(p4_avg.tama_arari) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">台粗利</div><div class="kpi-value color-p">{{ "{:,}".format(p4_avg.dai_arari) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">台売上</div><div class="kpi-value color-p">{{ "{:,}".format(p4_avg.dai_uriage) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">玉単価</div><div class="kpi-value color-p">{{ "%.3f"|format(p4_avg.tama_tanka) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">利益率</div><div class="kpi-value color-p">{{ "%.2f"|format(p4_avg.rieki_ritsu) }}%</div></div>
   </div>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>順位</th><th>変動</th><th>機種</th><th>発売日</th><th>経過週</th>
-          <th>打込</th><th>玉粗利</th><th>台粗利</th><th>台売上</th><th>玉単価</th>
-          <th>打込シェア</th><th>台粗利シェア</th><th>台売上シェア</th><th>台数シェア</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in ranking %}
-        <tr>
-          <td><span class="rank{% if r.rank <= 3 %} rank-{{ r.rank }}{% endif %}">{{ r.rank }}</span></td>
-          <td><span class="change {{ change_class(r.change) }}">{{ r.change }}</span></td>
-          <td>
-            <div class="machine-name">{{ r.kishu }}</div>
-            {% if r.kishu_type %}<div class="machine-type">{{ r.kishu_type }}</div>{% endif %}
-          </td>
-          <td>{{ r.hatsubaibi }}</td>
-          <td>{{ r.keika_shu }}</td>
-          <td class="num">{{ "{:,}".format(r.uchikomi) }}</td>
-          <td class="num{% if r.tama_arari is not none and r.tama_arari < 0 %} profit-negative{% endif %}">{{ "%.3f"|format(r.tama_arari) }}</td>
-          <td class="num {% if r.dai_arari is not none and r.dai_arari < 0 %}profit-negative{% else %}profit-positive{% endif %}">{{ "{:,}".format(r.dai_arari) }}</td>
-          <td class="num">{{ "{:,}".format(r.dai_uriage) }}</td>
-          <td class="num">{{ "%.3f"|format(r.tama_tanka) }}</td>
-          <td class="num">{{ "%.2f"|format(r.uchikomi_share) }}%</td>
-          <td class="num{% if r.dai_arari_share is not none and r.dai_arari_share < 0 %} profit-negative{% endif %}">{{ "%.2f"|format(r.dai_arari_share) }}%</td>
-          <td class="num">{{ "%.2f"|format(r.dai_uriage_share) }}%</td>
-          <td class="num">{{ "%.2f"|format(r.daisuu_share) }}%</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th>順位</th><th>変動</th><th>機種</th><th>発売日</th><th>経過週</th>
+      <th>打込</th><th>玉粗利</th><th>台粗利</th><th>台売上</th><th>玉単価</th>
+      <th>打込シェア</th><th>台粗利シェア</th><th>台売上シェア</th><th>台数シェア</th>
+    </tr></thead>
+    <tbody>{{ rows(p4_ranking) }}</tbody>
+  </table></div>
 </div>
-{% endmacro %}
 
-{{ section('PACHINKO', 'p', '4円パチンコ 全体平均', p4_avg, p4_ranking) }}
-
-{{ section('SLOT', 's', '20円スロット 全体平均', s20_avg, s20_ranking) }}
+<div class="section">
+  <div class="section-header slot">
+    <span class="section-tag tag-s">SLOT</span>
+    <span class="section-title">20円スロット 全体平均</span>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">打込</div><div class="kpi-value color-s">{{ "{:,}".format(s20_avg.uchikomi) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">コイン粗利</div><div class="kpi-value color-s">{{ "%.3f"|format(s20_avg.tama_arari) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">台粗利</div><div class="kpi-value color-s">{{ "{:,}".format(s20_avg.dai_arari) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">台売上</div><div class="kpi-value color-s">{{ "{:,}".format(s20_avg.dai_uriage) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">コイン単価</div><div class="kpi-value color-s">{{ "%.3f"|format(s20_avg.tama_tanka) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label">利益率</div><div class="kpi-value color-s">{{ "%.2f"|format(s20_avg.rieki_ritsu) }}%</div></div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th>順位</th><th>変動</th><th>機種</th><th>発売日</th><th>経過週</th>
+      <th>打込</th><th>コイン粗利</th><th>台粗利</th><th>台売上</th><th>コイン単価</th>
+      <th>打込シェア</th><th>台粗利シェア</th><th>台売上シェア</th><th>台数シェア</th>
+    </tr></thead>
+    <tbody>{{ rows(s20_ranking) }}</tbody>
+  </table></div>
+</div>
 
 <div class="legend">
   <span><span class="leg-new">NEW</span> 初登場</span>
@@ -152,5 +178,9 @@
   <span style="color:var(--muted)">順位変動は前週（{{ prev_period }}）との比較</span>
 </div>
 
+<div class="footer">
+  Auto-generated by Trust Link Partner / P-Brain Weekly Report Bot<br>
+  生成期間：{{ period }}
+</div>
 </body>
 </html>

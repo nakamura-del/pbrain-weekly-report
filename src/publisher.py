@@ -1,13 +1,29 @@
 """レポートHTMLを docs/YYYY-MM-DD/ に保存し、git push して公開URLを返す。"""
+import json
 import subprocess
 from pathlib import Path
 from .config import GITHUB_USERNAME, GITHUB_REPO, DOCS_DIR
 
 
-def publish(report_html: str, date_str: str) -> str:
+def load_prev_data(prev_date_str: str) -> dict:
+    """前週(=先々週)の確定ランキングを読み込む。無ければ空(初回・欠落時)。"""
+    p = DOCS_DIR / prev_date_str / "data.json"
+    if not p.exists():
+        print(f"注意: 前週データ {p} が無いため、順位変動は全て新規扱いになります")
+        return {"p4": [], "s20": []}
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def publish(report_html: str, date_str: str, snapshot: dict = None) -> str:
     out_dir = DOCS_DIR / date_str
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "index.html").write_text(report_html, encoding="utf-8")
+
+    # 来週の「先々週」参照用に確定ランキングを保存
+    if snapshot is not None:
+        (out_dir / "data.json").write_text(
+            json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
     update_index_page()
 

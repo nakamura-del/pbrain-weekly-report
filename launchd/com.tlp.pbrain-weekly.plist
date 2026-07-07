@@ -14,22 +14,34 @@
     </array>
 
     <key>WorkingDirectory</key>
-    <string>/Users/nakamurakotarou/Desktop/claudecode用/pbrain-weekly-report</string>
+    <string>/Users/nakamurakotarou/pbrain-weekly-report</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>LANG</key>
+        <string>ja_JP.UTF-8</string>
+        <key>LC_ALL</key>
+        <string>ja_JP.UTF-8</string>
+        <key>PYTHONUTF8</key>
+        <string>1</string>
+        <key>PYTHONPATH</key>
+        <string>/Users/nakamurakotarou/pbrain-weekly-report</string>
+    </dict>
 
     <key>StartCalendarInterval</key>
     <dict>
         <key>Weekday</key>
-        <integer>2</integer>
+        <integer>1</integer>
         <key>Hour</key>
-        <integer>7</integer>
+        <integer>8</integer>
         <key>Minute</key>
         <integer>0</integer>
     </dict>
 
     <key>StandardOutPath</key>
-    <string>/Users/nakamurakotarou/Desktop/claudecode用/pbrain-weekly-report/logs/stdout.log</string>
+    <string>/Users/nakamurakotarou/pbrain-weekly-report/logs/stdout.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/nakamurakotarou/Desktop/claudecode用/pbrain-weekly-report/logs/stderr.log</string>
+    <string>/Users/nakamurakotarou/pbrain-weekly-report/logs/stderr.log</string>
 </dict>
 </plist>
