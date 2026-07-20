@@ -153,11 +153,34 @@ def _parse_json_response(text: str) -> dict:
     return json.loads(text)
 
 
+import time
+from google.api_core.exceptions import DeadlineExceeded, ServiceUnavailable, InternalServerError
+
+# 2.5-proは大きな表のJSON生成に時間がかかり、既定デッドラインだと504になる。
+# 明示タイムアウトを付け、瞬間的な504/503はバックオフ再試行で吸収する。
+REQUEST_TIMEOUT = 300
+MAX_RETRIES = 3
+
+
 def call_gemini(image_path, prompt: str) -> dict:
     model = genai.GenerativeModel(MODEL_NAME)
     img = genai.upload_file(str(image_path))
-    response = model.generate_content([prompt, img])
-    return _parse_json_response(response.text)
+    last_err = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            response = model.generate_content(
+                [prompt, img],
+                request_options={"timeout": REQUEST_TIMEOUT},
+            )
+            return _parse_json_response(response.text)
+        except (DeadlineExceeded, ServiceUnavailable, InternalServerError) as e:
+            last_err = e
+            if attempt == MAX_RETRIES:
+                break
+            wait = 3 ** attempt  # 3 → 9 → 27秒（safe-data-fetch 指数バックオフ準拠）
+            print(f"  OCR再試行 {attempt}/{MAX_RETRIES}（{type(e).__name__}）… {wait}s待機")
+            time.sleep(wait)
+    raise last_err
 
 
 def extract_with_verification(image_path) -> dict:

@@ -1,5 +1,15 @@
-"""P-Brainから4画面（P4/S20 × 先週/先々週）のスクショを取得する。"""
+"""P-Brainから2画面（P4/S20 × 先週）のスクショを取得する。
+
+サーバー負荷を抑えるため safe-data-fetch ルールに準拠する:
+- 同時接続1（逐次実行のみ・並列禁止）
+- リクエスト間隔 最低3秒
+- ページ遷移タイムアウト30秒
+- 失敗時は最大3回・指数バックオフ(3,9,27秒)で再試行
+- HTTP 429/503 を検知したら即停止（自動リトライで押し切らない）
+- 実行後にリクエスト数・所要時間などを報告
+"""
 import asyncio
+import time
 from playwright.async_api import async_playwright
 from datetime import datetime
 from .config import (
@@ -24,14 +34,75 @@ BOOKMARK_URLS = {
     "s20": "https://www.p-brain777.com/ZAnalysisShare/index?favorite=140375",
 }
 
+# ── safe-data-fetch 準拠パラメータ ─────────────────────────────
+NAV_TIMEOUT_MS = 30000        # タイムアウト30秒
+MAX_RETRY = 3                 # 最大3回
+REQUEST_INTERVAL_SEC = 3      # リクエスト間隔 最低3秒
+STOP_STATUSES = {429, 503}    # 過負荷応答 → 即停止
+
+# 実行後報告用メトリクス
+_metrics = {"requests": 0, "errors": 0, "durations": []}
+_last_request_at = 0.0
+
+
+class ServerOverloadError(RuntimeError):
+    """HTTP 429/503。safe-data-fetch規定により再試行せず即停止する。"""
+
+
+async def _pace():
+    """前回リクエストから最低 REQUEST_INTERVAL_SEC 秒空ける（sleep必須）。"""
+    global _last_request_at
+    wait = REQUEST_INTERVAL_SEC - (time.monotonic() - _last_request_at)
+    if wait > 0:
+        await asyncio.sleep(wait)
+    _last_request_at = time.monotonic()
+
+
+async def _safe_goto(page, url):
+    """safe-data-fetch 準拠のページ遷移。
+
+    3秒間隔を空け、30秒タイムアウト、失敗は指数バックオフ(3,9,27秒)で最大3回。
+    HTTP 429/503 は即停止（自動リトライで押し切らない）。
+    """
+    for attempt in range(1, MAX_RETRY + 1):
+        await _pace()
+        t0 = time.monotonic()
+        try:
+            resp = await page.goto(url, timeout=NAV_TIMEOUT_MS, wait_until="load")
+            _metrics["requests"] += 1
+            _metrics["durations"].append(time.monotonic() - t0)
+            status = resp.status if resp else None
+            if status in STOP_STATUSES:
+                _metrics["errors"] += 1
+                raise ServerOverloadError(
+                    f"サーバー過負荷応答 HTTP {status} を検知。"
+                    f"safe-data-fetch規定により即停止: {url}"
+                )
+            return resp
+        except ServerOverloadError:
+            raise  # 429/503 は再試行しない
+        except Exception as e:
+            _metrics["errors"] += 1
+            if attempt == MAX_RETRY:
+                raise RuntimeError(
+                    f"{MAX_RETRY}回失敗のため中断: {url} ({type(e).__name__}: {e})"
+                ) from e
+            wait = 3 ** attempt  # 3 → 9 → 27秒
+            print(f"  遷移失敗 {attempt}/{MAX_RETRY}（{type(e).__name__}）… {wait}s待機して再試行")
+            await asyncio.sleep(wait)
+
 
 async def login(page):
-    await page.goto(PBRAIN_URL)
-    await page.wait_for_load_state("networkidle")
+    await _safe_goto(page, PBRAIN_URL)
+    await page.wait_for_load_state("networkidle", timeout=NAV_TIMEOUT_MS)
     await page.fill(SELECTORS["login_id"], PBRAIN_ID)
     await page.fill(SELECTORS["login_pw"], PBRAIN_PW)
+    await _pace()  # ログインPOST前にも3秒間隔を確保
+    t0 = time.monotonic()
     await page.click(SELECTORS["login_btn"])
-    await page.wait_for_load_state("networkidle")
+    await page.wait_for_load_state("networkidle", timeout=NAV_TIMEOUT_MS)
+    _metrics["requests"] += 1
+    _metrics["durations"].append(time.monotonic() - t0)
 
 
 async def _wait_ajax_idle(page, timeout_ms=60000):
@@ -62,6 +133,18 @@ async def _capture(page, out_path):
     return out_path
 
 
+def _report():
+    """safe-data-fetch: 実行後にリクエスト数・所要時間などを報告する。"""
+    durs = _metrics["durations"]
+    avg = sum(durs) / len(durs) if durs else 0.0
+    total = sum(durs)
+    print(
+        f"[データ取得サマリ] 総リクエスト={_metrics['requests']} / "
+        f"エラー={_metrics['errors']} / 合計応答={total:.1f}s / "
+        f"平均応答={avg:.1f}s / 次回再開=不要(固定2画面・差分は前週data.json参照)"
+    )
+
+
 async def collect(date_str: str) -> dict:
     """先週分のスクショ2枚(P4/S20)を取得して保存パスを返す。
 
@@ -77,22 +160,25 @@ async def collect(date_str: str) -> dict:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(viewport={"width": 1920, "height": 1080})
         page = await context.new_page()
+        page.set_default_timeout(NAV_TIMEOUT_MS)
 
-        await login(page)
+        try:
+            await login(page)
 
-        for sid, url in [("p4", BOOKMARK_URLS["p4"]), ("s20", BOOKMARK_URLS["s20"])]:
-            await page.goto(url)
-            await page.wait_for_load_state("networkidle")
-            await _wait_ajax_idle(page)
-            await page.wait_for_selector(SELECTORS["table_ready"], state="visible")
-            await page.wait_for_timeout(2000)
+            for sid, url in [("p4", BOOKMARK_URLS["p4"]), ("s20", BOOKMARK_URLS["s20"])]:
+                await _safe_goto(page, url)  # 3秒間隔・30秒TO・再試行・429/503即停止を内包
+                await page.wait_for_load_state("networkidle", timeout=NAV_TIMEOUT_MS)
+                await _wait_ajax_idle(page)
+                await page.wait_for_selector(SELECTORS["table_ready"], state="visible")
+                await page.wait_for_timeout(2000)
 
-            start = await page.input_value(SELECTORS["term_start"])
-            end = await page.input_value(SELECTORS["term_end"])
-            paths[f"{sid}_lastweek"] = await _capture(page, out_dir / f"{sid}_lastweek.png")
-            print(f"OK {sid} 先週 (既定期間 {start}〜{end}) -> {paths[f'{sid}_lastweek']}")
-
-        await browser.close()
+                start = await page.input_value(SELECTORS["term_start"])
+                end = await page.input_value(SELECTORS["term_end"])
+                paths[f"{sid}_lastweek"] = await _capture(page, out_dir / f"{sid}_lastweek.png")
+                print(f"OK {sid} 先週 (既定期間 {start}〜{end}) -> {paths[f'{sid}_lastweek']}")
+        finally:
+            await browser.close()
+            _report()
 
     return paths
 
