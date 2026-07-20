@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tlp.pbrain-weekly-desktop</string>
+
+    <!-- Python 本体(週次ジョブ)が docs/ を更新したら発火してデスクトップへミラー。
+         Python ではなく rsync(再exec しない普通のバイナリ)なので Full Disk Access が確実に効く。 -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/rsync</string>
+        <string>-a</string>
+        <string>--include=2026-*/</string>
+        <string>--include=2026-*/**</string>
+        <string>--include=index.html</string>
+        <string>--include=archive.html</string>
+        <string>--include=*.webloc</string>
+        <string>--exclude=*</string>
+        <string>/Users/nakamurakotarou/pbrain-weekly-report/docs/</string>
+        <string>/Users/nakamurakotarou/Desktop/週間レポート/</string>
+    </array>
+
+    <!-- docs ディレクトリが変化した数秒後に自動発火(週次ジョブの完了直後) -->
+    <key>WatchPaths</key>
+    <array>
+        <string>/Users/nakamurakotarou/pbrain-weekly-report/docs</string>
+    </array>
+
+    <!-- 保険: 毎週月曜 8:25 にも実行(週次ジョブ8:00の完了後) -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>25</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/nakamurakotarou/pbrain-weekly-report/logs/desktop-sync.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/nakamurakotarou/pbrain-weekly-report/logs/desktop-sync.log</string>
+</dict>
+</plist>

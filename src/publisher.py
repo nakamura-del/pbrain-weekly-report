@@ -4,6 +4,69 @@ import subprocess
 from pathlib import Path
 from .config import GITHUB_USERNAME, GITHUB_REPO, DOCS_DIR
 
+# デスクトップの保管先（実ファイルミラー）
+DESKTOP_DIR = Path.home() / "Desktop" / "週間レポート"
+
+# 公開サイトのトップURL（開くと常に最新レポートへ自動ジャンプ）
+PAGES_BASE = f"https://{GITHUB_USERNAME}.github.io/{GITHUB_REPO}/"
+
+
+def _webloc(url: str) -> str:
+    """macOS の .webloc（ダブルクリックでブラウザが開くネットショートカット）中身を返す。"""
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
+        '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
+        '<plist version="1.0">\n<dict>\n\t<key>URL</key>\n'
+        f'\t<string>{url}</string>\n</dict>\n</plist>\n'
+    )
+
+
+def write_web_shortcuts(date_str: str) -> None:
+    """HTTPS公開ページへのクリック用リンク(.webloc)を docs/ 側に生成する。
+
+    Desktop へは書かず docs/ に置くのがポイント。launchd のシステムPythonでも
+    docs/(TCC保護外)には書けるため、あとは rsync が Desktop へミラーする。
+    - 最新版リンク: トップURL(常に最新へ自動ジャンプ)
+    - 当週リンク  : その週のレポートURL(週ごとに貯まる)
+    """
+    latest = DOCS_DIR / "📊 週間レポート(最新・Web版).webloc"
+    latest.write_text(_webloc(PAGES_BASE), encoding="utf-8")
+    dated = DOCS_DIR / f"📊 {date_str} Web版.webloc"
+    dated.write_text(_webloc(f"{PAGES_BASE}{date_str}/"), encoding="utf-8")
+    print(f"🔗 Webリンク生成: {dated.name}")
+
+
+def copy_to_desktop(date_str: str) -> None:
+    """生成済みレポートをデスクトップの週間レポートフォルダへ実ファイルでコピーする。
+
+    ⚠️ launchd 経由のシステムPythonは macOS TCC 権限でデスクトップに書けず、
+    ここは PermissionError になる（8週間の障害と同じ原因）。その場合でも
+    パイプライン本体は落とさず警告だけ出す（週次コピーは rsync 用 LaunchAgent
+    com.tlp.pbrain-weekly-desktop が担当する）。手動実行時はここで確実にコピーされる。
+    """
+    try:
+        DESKTOP_DIR.mkdir(parents=True, exist_ok=True)
+        # dated フォルダ + 一覧HTMLを rsync でミラー
+        subprocess.run(
+            ["/usr/bin/rsync", "-a",
+             str(DOCS_DIR / date_str), str(DESKTOP_DIR) + "/"],
+            check=True,
+        )
+        for html in ("index.html", "archive.html"):
+            src = DOCS_DIR / html
+            if src.exists():
+                subprocess.run(["/usr/bin/rsync", "-a", str(src), str(DESKTOP_DIR) + "/"], check=True)
+        # HTTPS リンク(.webloc)もミラー
+        for wl in DOCS_DIR.glob("*.webloc"):
+            subprocess.run(["/usr/bin/rsync", "-a", str(wl), str(DESKTOP_DIR) + "/"], check=True)
+        print(f"🖥  デスクトップへコピー: {DESKTOP_DIR / date_str}")
+    except PermissionError:
+        print(f"⚠️  デスクトップ書込がTCC権限で拒否されました（launchd実行時は想定内。"
+              f"週次コピーは com.tlp.pbrain-weekly-desktop が担当）")
+    except Exception as e:
+        print(f"⚠️  デスクトップコピー失敗（本体処理は継続）: {e}")
+
 
 def load_prev_data(prev_date_str: str) -> dict:
     """前週(=先々週)の確定ランキングを読み込む。無ければ空(初回・欠落時)。"""
@@ -26,10 +89,14 @@ def publish(report_html: str, date_str: str, snapshot: dict = None) -> str:
         )
 
     update_index_page()
+    write_web_shortcuts(date_str)
 
     subprocess.run(["git", "add", "docs/"], check=True)
     subprocess.run(["git", "commit", "-m", f"weekly report {date_str}"], check=True)
     subprocess.run(["git", "push"], check=True)
+
+    # デスクトップの週間レポートフォルダへ実ファイルコピー（手動実行時に有効）
+    copy_to_desktop(date_str)
 
     url = f"https://{GITHUB_USERNAME}.github.io/{GITHUB_REPO}/{date_str}/"
     print(f"Published: {url}")
