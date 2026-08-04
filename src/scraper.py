@@ -9,6 +9,7 @@
 - 実行後にリクエスト数・所要時間などを報告
 """
 import asyncio
+import re
 import time
 from playwright.async_api import async_playwright
 from datetime import datetime
@@ -47,6 +48,19 @@ _last_request_at = 0.0
 
 class ServerOverloadError(RuntimeError):
     """HTTP 429/503。safe-data-fetch規定により再試行せず即停止する。"""
+
+
+class PeriodMismatchError(RuntimeError):
+    """画面の既定期間が想定集計週と一致しない（仕様書v2 §2-4/§10）。
+
+    月曜以外の実行や、P-Brain側の既定期間仕様変更で発生しうる。
+    誤った週のデータを正しい週として公開しないよう、組み立て前に中断する。
+    """
+
+
+def _norm_date(s) -> str:
+    """日付表記のゆれ(/,-,空白)を除去して数字8桁で比較できるようにする。"""
+    return re.sub(r"\D", "", str(s or ""))
 
 
 async def _pace():
@@ -156,6 +170,12 @@ async def collect(date_str: str) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = {}
 
+    # 想定集計週（直近完了週の月〜日）。画面既定期間がこれと一致するか照合する。
+    weeks = get_week_ranges()
+    last_monday, last_sunday = weeks["lastweek"]
+    exp_start_h = last_monday.strftime("%Y/%m/%d")
+    exp_end_h = last_sunday.strftime("%Y/%m/%d")
+
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(viewport={"width": 1920, "height": 1080})
@@ -174,6 +194,17 @@ async def collect(date_str: str) -> dict:
 
                 start = await page.input_value(SELECTORS["term_start"])
                 end = await page.input_value(SELECTORS["term_end"])
+
+                # 仕様§2-4/§10: 画面の既定期間が想定集計週と一致するか検証。
+                # 不一致（月曜以外の実行・既定期間仕様変更など）は組み立て前に中断する。
+                if (_norm_date(start), _norm_date(end)) != (
+                    last_monday.strftime("%Y%m%d"), last_sunday.strftime("%Y%m%d")
+                ):
+                    raise PeriodMismatchError(
+                        f"{sid}: 画面期間 {start}〜{end} が想定 {exp_start_h}〜{exp_end_h} と不一致。"
+                        "月曜実行か、P-Brain既定期間の仕様変更を確認してください。"
+                    )
+
                 paths[f"{sid}_lastweek"] = await _capture(page, out_dir / f"{sid}_lastweek.png")
                 print(f"OK {sid} 先週 (既定期間 {start}〜{end}) -> {paths[f'{sid}_lastweek']}")
         finally:
