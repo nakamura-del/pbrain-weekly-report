@@ -31,15 +31,15 @@ def build(cur_ocr: dict, prev_rankings: dict, ref_date=None):
     # 2) 前週保存ランキング（=先々週）と比較して変動（NEW/▲/▼/→）を付与
     p4_prev = prev_rankings.get("p4", [])
     s20_prev = prev_rankings.get("s20", [])
-    p4_ranking = ranker.calc_rank_change(p4_last, p4_prev)
-    s20_ranking = ranker.calc_rank_change(s20_last, s20_prev)
+    p4_ranking = ranker.calc_rank_change(p4_last, p4_prev, last_start, last_end)
+    s20_ranking = ranker.calc_rank_change(s20_last, s20_prev, last_start, last_end)
 
     # 3) 来週用スナップショット（経過週補正の前＝順位・機種名の確定状態）
     snapshot = {"p4": _snapshot(p4_ranking), "s20": _snapshot(s20_ranking)}
 
     # 4) 表示用に経過週を-1（元が1週なら1のまま）
-    ranker.apply_keika_display(p4_ranking)
-    ranker.apply_keika_display(s20_ranking)
+    ranker.apply_keika_display(p4_ranking, last_start, last_end)
+    ranker.apply_keika_display(s20_ranking, last_start, last_end)
 
     period_label = f"{last_start.strftime('%Y/%m/%d')}〜{last_end.strftime('%Y/%m/%d')}"
     prev_period_label = f"{two_start.strftime('%Y/%m/%d')}〜{two_end.strftime('%Y/%m/%d')}"
